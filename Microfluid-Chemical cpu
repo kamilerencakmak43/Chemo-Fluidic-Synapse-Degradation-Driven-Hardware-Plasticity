@@ -1,0 +1,90 @@
+import tkinter as tk
+import random
+
+class MicrofluidicVisualSim:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Chemo-Fluidic Core - Physical Interface")
+        self.root.geometry("1000x600")
+        self.root.configure(bg="#0c0c0c")
+
+        self.hydrogel_thickness = 40 
+        self.fluid_speed = 6         
+        self.fluid_color = "#00aaff" 
+        self.particles = []          
+
+        self.setup_ui()
+        self.spawn_particles()
+        self.game_loop()
+
+    def setup_ui(self):
+        ctrl_frame = tk.Frame(self.root, bg="#1a1a1a", pady=15)
+        ctrl_frame.pack(fill=tk.X, side=tk.TOP)
+
+        tk.Button(ctrl_frame, text="[+] INJECT ACID (LTP - Erode)", bg="#004400", fg="#00ff00", font=("Courier", 12, "bold"), command=self.inject_acid).pack(side=tk.LEFT, padx=20, expand=True)
+        tk.Button(ctrl_frame, text="[~] NEUTRAL FLOW (Wait)", bg="#333333", fg="#ffffff", font=("Courier", 12, "bold"), command=self.inject_idle).pack(side=tk.LEFT, padx=20, expand=True)
+        tk.Button(ctrl_frame, text="[-] INJECT BUFFER (LTD - Inflate)", bg="#440000", fg="#ff3333", font=("Courier", 12, "bold"), command=self.inject_buffer).pack(side=tk.LEFT, padx=20, expand=True)
+
+        self.canvas = tk.Canvas(self.root, bg="#121212", highlightthickness=0)
+        self.canvas.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        self.canvas.create_rectangle(50, 50, 950, 150, fill="#2a2a2a", outline="#444")
+        self.canvas.create_rectangle(50, 450, 950, 550, fill="#2a2a2a", outline="#444")
+        self.canvas.create_text(500, 100, text="UPPER CHIP CASING", fill="#555", font=("Courier", 14))
+        self.canvas.create_text(500, 500, text="LOWER CHIP CASING", fill="#555", font=("Courier", 14))
+
+        self.gel_top = self.canvas.create_rectangle(50, 150, 950, 150 + self.hydrogel_thickness, fill="#8800ff", outline="", stipple="gray50")
+        self.gel_bottom = self.canvas.create_rectangle(50, 450 - self.hydrogel_thickness, 950, 450, fill="#8800ff", outline="", stipple="gray50")
+
+    def spawn_particles(self):
+        for _ in range(150):
+            x = random.randint(50, 950)
+            y = random.randint(150 + self.hydrogel_thickness + 5, 450 - self.hydrogel_thickness - 5)
+            p_id = self.canvas.create_oval(x, y, x+6, y+6, fill=self.fluid_color, outline="")
+            self.particles.append({'id': p_id, 'x': x, 'y': y})
+
+    def inject_acid(self):
+        self.hydrogel_thickness = max(10, self.hydrogel_thickness - 15)
+        self.fluid_speed = 15
+        self.fluid_color = "#00ffcc" 
+        self.update_environment()
+
+    def inject_buffer(self):
+        self.hydrogel_thickness = min(130, self.hydrogel_thickness + 20)
+        self.fluid_speed = 2
+        self.fluid_color = "#ff3333"
+        self.update_environment()
+
+    def inject_idle(self):
+        self.fluid_speed = 6
+        self.fluid_color = "#00aaff" 
+        self.update_environment()
+
+    def update_environment(self):
+        self.canvas.coords(self.gel_top, 50, 150, 950, 150 + self.hydrogel_thickness)
+        self.canvas.coords(self.gel_bottom, 50, 450 - self.hydrogel_thickness, 950, 450)
+        
+        for p in self.particles:
+            self.canvas.itemconfig(p['id'], fill=self.fluid_color)
+
+    def game_loop(self):
+        top_bound = 150 + self.hydrogel_thickness
+        bot_bound = 450 - self.hydrogel_thickness
+
+        for p in self.particles:
+            p['x'] += self.fluid_speed 
+            
+            if p['x'] > 950:
+                p['x'] = 50
+                p['y'] = random.randint(top_bound + 5, bot_bound - 5)
+            else:
+                if p['y'] <= top_bound: p['y'] = top_bound + random.randint(2, 10)
+                if p['y'] >= bot_bound: p['y'] = bot_bound - random.randint(2, 10)
+
+            self.canvas.coords(p['id'], p['x'], p['y'], p['x']+6, p['y']+6)
+
+        self.root.after(30, self.game_loop)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MicrofluidicVisualSim(root)
+    root.mainloop()
