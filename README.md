@@ -20,13 +20,30 @@ The weight adjustment is modeled around the principles of fluid dynamics, heavil
 *   **Dynamic Weight Calculation:** Live updating of flow speed and channel width based on user injections.
 
 ## How to Run
-This project requires **Python 3.x**. The physical visualizer relies on Python's standard GUI library, so no external package installations are strictly required for the core animation script.
+Requirements
+pip install matplotlib numpy
+Optional for a nicer GUI window backend:
 
-1. Clone the repository to your local machine.
-2. Run the main Python file:
-   ```bash
-   python microfluidproject.py
-   Use the control panel to inject acid [+], inject pH buffer [-], or maintain neutral flow [~] and observe the physical responses in the microfluidic channel.
+pip install PyQt5   # or PyQt6 / tk
+Run
+python main.py
+Controls
+Button	Action
+[A] INJECT ACID (LTP)	Injects pH=4 acid → channels erode (widen), resistance drops
+[B] INJECT BUFFER (LTD)	Injects pH=8.5 buffer → hydrogels swell, flow restricted
+[A] STRONG ACID pH=2	Maximum erosion pulse
+[B] STRONG BUFFER pH=12	Maximum hydrogel swelling
+[R] RESET	Rebuild fresh network
+Architecture
+physics.py   — Network, Channel, Hydrogel, Node, FluidPacket dataclasses + Kirchhoff solver
+renderer.py  — Matplotlib draw engine (channels, fluid packets, hydrogel blobs, nodes)
+main.py      — Figure layout, animation loop, button handlers, bar chart, event log
+Physics Summary
+Resistance follows Hagen-Poiseuille: R ∝ L / r⁴
+LTP (acid): erosion widens effective radius → lower R → higher flow
+LTD (buffer): hydrogel swells → reduces effective width → higher R → lower flow
+Kirchhoff nodal analysis solves pressure at every bifurcation each frame
+Passive recovery: channels and hydrogels slowly revert toward baseline over time
 
 Author
 Kamil Eren Çakmak
